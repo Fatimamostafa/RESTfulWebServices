@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -16,6 +18,10 @@ import android.widget.Toast;
 
 import com.fatimamostafa.restfulwebservices.model.DataItem;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,14 +35,13 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
     public static final String ITEM_KEY = "item_key";
     private List<DataItem> mItems;
     private Context mContext;
-    private Map<String, Bitmap> mBitmapMap;
+    private Map<String, Bitmap> mBitmapMap = new HashMap<>();
     private SharedPreferences.OnSharedPreferenceChangeListener prefsListener;
 
-    public DataItemAdapter(Context context, List<DataItem> items,
-                           Map<String, Bitmap> bitmapMap) {
+    public DataItemAdapter(Context context, List<DataItem> items) {
         this.mContext = context;
         this.mItems = items;
-        this.mBitmapMap = bitmapMap;
+
     }
 
     @Override
@@ -69,11 +74,18 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
 
         try {
             holder.tvName.setText(item.getItemName());
-           /* String imageFile = item.getImage();
-            InputStream inputStream = mContext.getAssets().open(imageFile);
-            Drawable d = Drawable.createFromStream(inputStream, null);*/
-           Bitmap bitmap = mBitmapMap.get(item.getItemName());
-            holder.imageView.setImageBitmap(bitmap);
+            //display image
+
+            if(mBitmapMap.containsKey(item.getItemName())){
+                Bitmap bitmap = mBitmapMap.get(item.getItemName());
+                holder.imageView.setImageBitmap(bitmap);
+            }
+            else{
+                ImageDownloadTask imageDownloadTask = new ImageDownloadTask();
+                imageDownloadTask.setViewHolder(holder);
+                imageDownloadTask.execute(item);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -110,12 +122,55 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
         public TextView tvName;
         public ImageView imageView;
         public View mView;
+
         public ViewHolder(View itemView) {
             super(itemView);
 
             tvName = (TextView) itemView.findViewById(R.id.itemNameText);
             imageView = (ImageView) itemView.findViewById(R.id.imageView);
             mView = itemView;
+        }
+    }
+
+    private class ImageDownloadTask extends AsyncTask<DataItem, Void, Bitmap> {
+        private static final String PHOTOS_BASE_URL =
+                "http://560057.youcanlearnit.net/services/images/";
+        private DataItem mDataItem;
+        private ViewHolder mHolder;
+
+        public void setViewHolder(ViewHolder holder) {
+            mHolder = holder;
+        }
+
+        @Override
+        protected Bitmap doInBackground(DataItem... dataItems) {
+
+            mDataItem = dataItems[0];
+            String imageUrl = PHOTOS_BASE_URL + mDataItem.getImage();
+            InputStream in = null;
+
+            try {
+                in = (InputStream) new URL(imageUrl).getContent();
+                return BitmapFactory.decodeStream(in);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (in != null) {
+                        in.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            mHolder.imageView.setImageBitmap(bitmap);
+            mBitmapMap.put(mDataItem.getItemName(),bitmap);
         }
     }
 }

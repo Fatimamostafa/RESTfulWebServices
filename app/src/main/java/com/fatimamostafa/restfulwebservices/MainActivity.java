@@ -40,43 +40,38 @@ import java.util.List;
 import java.util.Map;
 
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Map<String, Bitmap>> {
+public class MainActivity extends AppCompatActivity {
 
     private static final int SIGNIN_REQUEST = 1001;
     public static final String MY_GLOBAL_PREFS = "my_global_prefs";
     private static final String TAG = "MainActivity";
-    List<DataItem> dataItemList = SampleDataProvider.dataItemList;
+    private static final String JSON_URL =
+            "http://560057.youcanlearnit.net/services/json/itemsfeed.php";
 
-    public static final String JSON_URL = "http://560057.youcanlearnit.net/services/json/itemsfeed.php";
-
-    //DataSource mDataSource;
+    //    DataSource mDataSource;
     List<DataItem> mItemList;
     DrawerLayout mDrawerLayout;
     ListView mDrawerList;
     String[] mCategories;
     RecyclerView mRecyclerView;
     DataItemAdapter mItemAdapter;
-    private boolean networkOk;
-    Map<String, Bitmap> mBitmaps;
+    boolean networkOk;
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-          /*  String message = intent.getStringExtra(MyService.MY_SERVICE_PAYLOAD);*/
-
             DataItem[] dataItems = (DataItem[]) intent
                     .getParcelableArrayExtra(MyService.MY_SERVICE_PAYLOAD);
-            Toast.makeText(MainActivity.this, "Received" + dataItems.length
-                    + " items from service", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this,
+                    "Received " + dataItems.length + " items from service",
+                    Toast.LENGTH_SHORT).show();
+
             mItemList = Arrays.asList(dataItems);
 
-            getSupportLoaderManager().initLoader(0, null, MainActivity.this)
-                    .forceLoad();
-
+            displayDataItems(null);
 
         }
     };
-    
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,10 +95,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 //      end of navigation drawer
-/*
-        mDataSource = new DataSource(this);
-        mDataSource.open();
-        mDataSource.seedDatabase(dataItemList);*/
+
+//        mDataSource = new DataSource(this);
+//        mDataSource.open();
+//        mDataSource.seedDatabase(dataItemList);
 
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         boolean grid = settings.getBoolean(getString(R.string.pref_display_grid), false);
@@ -113,45 +108,47 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         }
 
-        //displayDataItems(null);
+//        displayDataItems(null);
 
         networkOk = NetworkHelper.hasNetworkAccess(this);
-        if(networkOk) {
+        if (networkOk) {
             Intent intent = new Intent(this, MyService.class);
             intent.setData(Uri.parse(JSON_URL));
             startService(intent);
-        }
-        else {
-            Toast.makeText(this, "No network connection!", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Network not available", Toast.LENGTH_SHORT).show();
         }
 
         LocalBroadcastManager.getInstance(getApplicationContext())
-                .registerReceiver(mBroadcastReceiver, new IntentFilter(MyService.MY_SERVICE_MESSAGE));
+                .registerReceiver(mBroadcastReceiver,
+                        new IntentFilter(MyService.MY_SERVICE_MESSAGE));
+
     }
 
     private void displayDataItems(String category) {
-      //  listFromDB = mDataSource.getAllItems(category);
+//        mItemList = mDataSource.getAllItems(category);
         if (mItemList != null) {
-        mItemAdapter = new DataItemAdapter(this, mItemList, mBitmaps);
-        mRecyclerView.setAdapter(mItemAdapter);
+            mItemAdapter = new DataItemAdapter(this, mItemList);
+            mRecyclerView.setAdapter(mItemAdapter);
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
- //       mDataSource.close();
+//        mDataSource.close();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
- //       mDataSource.open();
+//        mDataSource.open();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .unregisterReceiver(mBroadcastReceiver);
     }
@@ -202,61 +199,4 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         }
 
     }
-
-    @Override
-    public Loader<Map<String, Bitmap>> onCreateLoader(int id, Bundle args) {
-        return new ImageDownloader(this, mItemList);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Map<String, Bitmap>> loader, Map<String, Bitmap> data) {
-        mBitmaps = data;
-        displayDataItems(null);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Map<String, Bitmap>> loader) {
-
-    }
-
-    private static class ImageDownloader
-            extends AsyncTaskLoader<Map<String, Bitmap>> {
-
-        private static final String PHOTOS_BASE_URL =
-                "http://560057.youcanlearnit.net/services/images/";
-        private static List<DataItem> mItemList;
-
-        public ImageDownloader(Context context, List<DataItem> itemList) {
-            super(context);
-            mItemList = itemList;
-        }
-
-        @Override
-        public Map<String, Bitmap> loadInBackground() {
-            //download image files here
-            Map<String, Bitmap> map = new HashMap<>();
-
-            for(DataItem item: mItemList){
-                String imageUrl = PHOTOS_BASE_URL + item.getImage();
-                InputStream in = null;
-
-                try {
-                    in = (InputStream) new URL(imageUrl).getContent();
-                    Bitmap bitmap = BitmapFactory.decodeStream(in);
-                    map.put(item.getItemName(), bitmap);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            return map;
-        }
-    }
-
 }
