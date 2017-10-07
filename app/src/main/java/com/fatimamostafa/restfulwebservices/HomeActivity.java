@@ -29,7 +29,8 @@ public class HomeActivity extends AppCompatActivity implements OnClickCallback{
         String[] titles = {
                 "AsyncTask Request",
                 "AsyncTaskLoader Request",
-                "Intent Service Request"
+                "Intent Service Request",
+                "Nadia's Service"
         };
 
         mLayoutManager = new GridLayoutManager(this,2);
@@ -49,10 +50,13 @@ public class HomeActivity extends AppCompatActivity implements OnClickCallback{
                 Intent bIntent = new Intent(this, AsyncTaskLoaderRequestActivity.class);
                 startActivity(bIntent);
                 break;
-
             case 2:
                 Intent cIntent = new Intent(this, IntentServiceActivity.class);
                 startActivity(cIntent);
+                break;
+            case 3:
+                Intent dIntent = new Intent(this, MainActivity.class);
+                startActivity(dIntent);
                 break;
         }
     }
