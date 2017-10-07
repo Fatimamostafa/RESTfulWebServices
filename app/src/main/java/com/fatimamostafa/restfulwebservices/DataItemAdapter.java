@@ -17,13 +17,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fatimamostafa.restfulwebservices.model.DataItem;
+import com.fatimamostafa.restfulwebservices.utils.ImageCachceManager;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by fatimamostafa on 9/30/17.
@@ -35,7 +34,7 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
     public static final String ITEM_KEY = "item_key";
     private List<DataItem> mItems;
     private Context mContext;
-    private Map<String, Bitmap> mBitmapMap = new HashMap<>();
+    //private Map<String, Bitmap> mBitmapMap = new HashMap<>();
     private SharedPreferences.OnSharedPreferenceChangeListener prefsListener;
 
     public DataItemAdapter(Context context, List<DataItem> items) {
@@ -76,7 +75,7 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
             holder.tvName.setText(item.getItemName());
             //display image
 
-            if(mBitmapMap.containsKey(item.getItemName())){
+            /*if(mBitmapMap.containsKey(item.getItemName())){
                 Bitmap bitmap = mBitmapMap.get(item.getItemName());
                 holder.imageView.setImageBitmap(bitmap);
             }
@@ -84,6 +83,16 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
                 ImageDownloadTask imageDownloadTask = new ImageDownloadTask();
                 imageDownloadTask.setViewHolder(holder);
                 imageDownloadTask.execute(item);
+            }*/
+
+            Bitmap bitmap = ImageCachceManager.getBitmap(mContext, item);
+            if (bitmap == null) {
+                ImageDownloadTask task = new ImageDownloadTask();
+                task.setViewHolder(holder);
+                task.execute(item);
+            }
+            else {
+                holder.imageView.setImageBitmap(bitmap);
             }
 
         } catch (Exception e) {
@@ -170,7 +179,8 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
         protected void onPostExecute(Bitmap bitmap) {
             super.onPostExecute(bitmap);
             mHolder.imageView.setImageBitmap(bitmap);
-            mBitmapMap.put(mDataItem.getItemName(),bitmap);
+            //mBitmapMap.put(mDataItem.getItemName(),bitmap);
+            ImageCachceManager.putBitmap(mContext, mDataItem, bitmap);
         }
     }
 }
