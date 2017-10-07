@@ -11,8 +11,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.fatimamostafa.restfulwebservices.R;
+import com.fatimamostafa.restfulwebservices.model.DataItem;
 import com.fatimamostafa.restfulwebservices.services.MyService;
 import com.fatimamostafa.restfulwebservices.utils.NetworkHelper;
 
@@ -36,8 +38,14 @@ public class IntentServiceActivity extends AppCompatActivity {
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(MyService.MY_SERVICE_PAYLOAD);
-            tvSampleText.append(message + "\n");
+          /*  String message = intent.getStringExtra(MyService.MY_SERVICE_PAYLOAD);*/
+
+            DataItem[] dataItems = (DataItem[]) intent
+                    .getParcelableArrayExtra(MyService.MY_SERVICE_PAYLOAD);
+            for(DataItem item : dataItems){
+                tvSampleText.append(item.getItemName() + "\n");
+            }
+
         }
     };
 
@@ -60,11 +68,14 @@ public class IntentServiceActivity extends AppCompatActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btnRun:
-                Intent intent = new Intent(this, MyService.class);
-                intent.setData(Uri.parse(JSON_URL));
-                startService(intent);
-                startService(intent);
-                startService(intent);
+                if(networkOk){
+                    Intent intent = new Intent(this, MyService.class);
+                    intent.setData(Uri.parse(JSON_URL));
+                    startService(intent);
+                }
+                else{
+                    Toast.makeText(this, "Network not available!", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.btnClear:
                 tvSampleText.setText("");

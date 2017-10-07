@@ -7,6 +7,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.fatimamostafa.restfulwebservices.model.DataItem;
+import com.fatimamostafa.restfulwebservices.utils.HttpHelper;
+import com.google.gson.Gson;
+
+import java.io.IOException;
+
 /**
  * Created by fatimamostafa on 10/1/17.
  */
@@ -27,14 +33,25 @@ public class MyService extends IntentService {
         Log.i(TAG, "onHandleIntent: " + uri.toString());
 
 
+        String response;
         try {
+            response = HttpHelper.downloadUrl(uri.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        Gson gson = new Gson();
+        DataItem[] dataItems = gson.fromJson(response, DataItem[].class);
+
+        /*try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
+*/
         Intent messageIntent = new Intent(MY_SERVICE_MESSAGE);
-        messageIntent.putExtra(MY_SERVICE_PAYLOAD, "Service all done");
+        messageIntent.putExtra(MY_SERVICE_PAYLOAD, dataItems);
         LocalBroadcastManager localBroadcastManager =
                 LocalBroadcastManager.getInstance(getApplicationContext());
         localBroadcastManager.sendBroadcast(messageIntent);
