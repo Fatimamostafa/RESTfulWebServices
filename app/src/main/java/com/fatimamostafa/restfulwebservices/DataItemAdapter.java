@@ -3,7 +3,7 @@ package com.fatimamostafa.restfulwebservices;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -16,9 +16,8 @@ import android.widget.Toast;
 
 import com.fatimamostafa.restfulwebservices.model.DataItem;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by fatimamostafa on 9/30/17.
@@ -30,11 +29,14 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
     public static final String ITEM_KEY = "item_key";
     private List<DataItem> mItems;
     private Context mContext;
+    private Map<String, Bitmap> mBitmapMap;
     private SharedPreferences.OnSharedPreferenceChangeListener prefsListener;
 
-    public DataItemAdapter(Context context, List<DataItem> items) {
+    public DataItemAdapter(Context context, List<DataItem> items,
+                           Map<String, Bitmap> bitmapMap) {
         this.mContext = context;
         this.mItems = items;
+        this.mBitmapMap = bitmapMap;
     }
 
     @Override
@@ -67,11 +69,12 @@ public class DataItemAdapter extends RecyclerView.Adapter<DataItemAdapter.ViewHo
 
         try {
             holder.tvName.setText(item.getItemName());
-            String imageFile = item.getImage();
+           /* String imageFile = item.getImage();
             InputStream inputStream = mContext.getAssets().open(imageFile);
-            Drawable d = Drawable.createFromStream(inputStream, null);
-            holder.imageView.setImageDrawable(d);
-        } catch (IOException e) {
+            Drawable d = Drawable.createFromStream(inputStream, null);*/
+           Bitmap bitmap = mBitmapMap.get(item.getItemName());
+            holder.imageView.setImageBitmap(bitmap);
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
