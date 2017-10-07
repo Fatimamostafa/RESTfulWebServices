@@ -2,9 +2,13 @@
 
 This repository contains the exercises from Lynda's tutorial.
 This project includes:
+
 * Multithreading in Android
+* Manage requests with AsyncTask, AsyncTaskLoader and IntentService
 * Requesting Data over the Web
+* Parse JSON responses with Gson
 * Working with binary responses
-* Sending data to Web Services
-* Manage HTTP Requests with libraries
-* Manage RESTful APIs with Retrofit 2
+* Download images from a web server
+* Cache images in persistent storage
+
+
